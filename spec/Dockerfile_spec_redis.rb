@@ -1,6 +1,7 @@
 require 'docker'
 require 'serverspec'
 require 'redis'
+require 'pry'
 
 REDIS_PORT = 6379
 
@@ -27,7 +28,13 @@ describe "Dockerfile" do
     it { should be_installed }
   end
 
-  describe 'Dockerfile#running' do
+  describe 'Dockerfile#config' do
+    it 'should expose the redis port' do
+      expect(@image.json['ContainerConfig']['ExposedPorts']).to include("#{REDIS_PORT}/tcp")
+    end
+  end
+
+  describe 'Docker Running' do
     before(:all) do
       @container = Docker::Container.create(
         'Image'      => @image.id,
@@ -35,7 +42,6 @@ describe "Dockerfile" do
           'PortBindings' => { "#{REDIS_PORT}/tcp" => [{ 'HostPort' => "#{REDIS_PORT}" }] }
         }
       )
-
       @container.start
     end
 
